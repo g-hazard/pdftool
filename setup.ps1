@@ -7,6 +7,9 @@ param(
 Set-StrictMode -Version 3
 $ErrorActionPreference = "Stop"
 
+# Check if running as administrator
+$isAdmin = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+
 function Write-Note {
     param([string]$Message)
     Write-Host "[*] $Message"
@@ -144,18 +147,38 @@ function Install-Python {
     }
 }
 
+function Refresh-EnvironmentPath {
+    Write-Note "Refreshing environment PATH..."
+    $env:Path = [System.Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path", "User")
+}
+
 function Ensure-Python {
     param([string]$Version)
 
     $launchers = Get-PythonLaunchers
     if ($launchers.Cli -and $launchers.Context) {
+        Write-Note "Python is already installed."
         return $launchers
     }
 
+    Write-Note "Python not found. Installing Python $Version..."
     Install-Python -Version $Version
+    
+    # Refresh PATH to pick up newly installed Python
+    Refresh-EnvironmentPath
+    Start-Sleep -Seconds 2
+    
     $launchers = Get-PythonLaunchers
     if (-not $launchers.Cli) {
-        throw "Python CLI launcher (py or python) not found after installation."
+        Write-Host ""
+        Write-Host "Python installation completed, but Python launcher not found in PATH." -ForegroundColor Yellow
+        Write-Host ""
+        Write-Host "Please do ONE of the following:" -ForegroundColor Cyan
+        Write-Host "  1. Close this PowerShell window and run the installer again" -ForegroundColor White
+        Write-Host "  2. Or manually install Python from: https://www.python.org/downloads/" -ForegroundColor White
+        Write-Host "     Make sure to check 'Add Python to PATH' during installation" -ForegroundColor White
+        Write-Host ""
+        throw "Python installation requires a shell restart. Please rerun the installer."
     }
     if (-not $launchers.Context) {
         Write-Warning "Python windowed launcher (pyw) not found. Context menu will use '$($launchers.Cli)'."
@@ -195,6 +218,17 @@ function Register-ContextMenu {
 }
 
 Write-Note "Starting PDF merge tool setup."
+
+if (-not $isAdmin) {
+    Write-Host ""
+    Write-Host "NOTE: Not running as Administrator" -ForegroundColor Yellow
+    Write-Host "If Python installation fails, please:" -ForegroundColor Yellow
+    Write-Host "  1. Right-click PowerShell" -ForegroundColor White
+    Write-Host "  2. Select 'Run as Administrator'" -ForegroundColor White
+    Write-Host "  3. Run the installer again" -ForegroundColor White
+    Write-Host ""
+}
+
 $launchers = Ensure-Python -Version $PythonVersion
 
 Ensure-PdfLibraries -CliLauncher $launchers.Cli
