@@ -7,10 +7,8 @@ This project provides a Python-based tool for merging multiple PDF files with Wi
 Open PowerShell and run:
 
 ```powershell
-irm https://raw.githubusercontent.com/YOUR_USERNAME/pdftool/main/install.ps1 | iex
+irm https://raw.githubusercontent.com/g-hazard/pdftool/main/install.ps1 | iex
 ```
-
-Replace `YOUR_USERNAME` with your GitHub username after uploading this repository to GitHub.
 
 ## Alternative: Manual Setup
 

@@ -22,8 +22,8 @@ New-Item -ItemType Directory -Path $tempDir | Out-Null
 
 Write-Host "Downloading PDF Merge Tool..." -ForegroundColor Green
 
-# Base URL for raw GitHub content (update with your repository)
-$baseUrl = "https://raw.githubusercontent.com/YOUR_USERNAME/pdftool/main"
+# Base URL for raw GitHub content
+$baseUrl = "https://raw.githubusercontent.com/g-hazard/pdftool/main"
 
 # List of files to download
 $files = @(
