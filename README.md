@@ -1,18 +1,31 @@
 # PDF Merge Context Menu Tool
 
-This project provides a Python-based tool for merging multiple PDF files with Windows File Explorer context menu integration.
+Merge multiple PDF files directly from Windows File Explorer context menu - **no Python installation required!**
 
-## Quick Install (One-Line Command)
+## 🚀 Quick Install (Recommended - Portable Version)
 
-Open PowerShell and run:
+**One-line command - no installation, no dependencies, no admin rights needed:**
+
+```powershell
+irm https://raw.githubusercontent.com/g-hazard/pdftool/main/portable-installer.ps1 | iex
+```
+
+**What this does:**
+- ✅ Downloads portable Python (~45MB total) to `%LOCALAPPDATA%\PDFMergeTool`
+- ✅ Self-contained - everything in one folder
+- ✅ No system-wide Python installation
+- ✅ Adds "Merge PDF" to context menu
+- ✅ Easy to uninstall - just delete the folder
+
+## Alternative: System Python Installation
+
+If you already have Python installed or prefer using system Python:
 
 ```powershell
 irm https://raw.githubusercontent.com/g-hazard/pdftool/main/install.ps1 | iex
 ```
 
-## Alternative: Manual Setup
-
-If you've cloned the repository, run the setup script from an elevated PowerShell prompt:
+**Or manually** (for developers):
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\setup.ps1
@@ -66,10 +79,22 @@ If you prefer to set things up manually, make sure you have:
 4. Choose where to save the merged file
 5. Toast notification shows when complete
 
-## Removing the entry
+## Uninstalling
+
+**Portable Version:**
+
+Option 1 - Run the uninstaller:
+```powershell
+powershell -File "$env:LOCALAPPDATA\PDFMergeTool\uninstall.ps1"
+```
+
+Option 2 - Manual removal:
+1. Delete folder: `%LOCALAPPDATA%\PDFMergeTool`
+2. Remove registry key: `HKCU\Software\Classes\SystemFileAssociations\.pdf\shell\Merge PDF`
+
+**System Python Version:**
 
 Run:
-
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\unregister_context_menu.ps1
 ```
