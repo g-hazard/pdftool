@@ -302,17 +302,19 @@ def main(argv: Sequence[str]) -> int:
 
         destination = explicit_output
         if destination is None:
-            if filedialog_module is None:
-                _show_message(
-                    messagebox_module,
-                    "error",
-                    "Unable to show file save dialog",
-                )
-                return 1
-            destination = _choose_output_path(filedialog_module, pdfs[0])
-            if destination is None:
-                # User cancelled the dialog
-                return 0
+            # Auto-generate output path in same folder as first PDF
+            first_pdf = pdfs[0]
+            base_name = "merged.pdf"
+            destination = first_pdf.parent / base_name
+            
+            # If file exists, add number suffix
+            counter = 1
+            while destination.exists():
+                base_name = f"merged_{counter}.pdf"
+                destination = first_pdf.parent / base_name
+                counter += 1
+            
+            _log(f"Auto-generated output path: {destination}")
 
         destination = destination.expanduser()
         if destination.suffix.lower() != ".pdf":
@@ -323,10 +325,17 @@ def main(argv: Sequence[str]) -> int:
         merge_pdfs(pdfs, destination)
 
         _log(f"merged -> {len(pdfs)} files into {destination}")
+        
+        # Show notification with file location
+        if explicit_output:
+            msg = f"Merged {len(pdfs)} PDF files\n\n{destination}"
+        else:
+            msg = f"Merged {len(pdfs)} PDF files\n\nSaved as: {destination.name}\nLocation: {destination.parent}"
+        
         _show_message(
             messagebox_module,
             "info",
-            f"Successfully merged {len(pdfs)} PDF files\n{destination.name}",
+            msg,
         )
         return 0
     except RuntimeError as exc:
