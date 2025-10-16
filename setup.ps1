@@ -42,38 +42,73 @@ function Resolve-CommandPath {
     return $null
 }
 
+function Test-RealPython {
+    param([string]$Path)
+    
+    if (-not $Path -or -not (Test-Path $Path)) {
+        return $false
+    }
+    
+    # Test if this is actually Python and not the Microsoft Store stub
+    try {
+        $output = & $Path --version 2>&1
+        $exitCode = $LASTEXITCODE
+        # Microsoft Store stub exits with 9009 and outputs error message
+        if ($exitCode -ne 0 -or $output -like "*Microsoft Store*") {
+            return $false
+        }
+        return $true
+    } catch {
+        return $false
+    }
+}
+
 function Get-PythonLaunchers {
     $cli = $null
     $context = $null
 
-    $pyCommand = Get-Command -Name "py" -ErrorAction SilentlyContinue
-    if ($pyCommand) {
-        $cli = Resolve-CommandPath -Command $pyCommand
+    # Try py launcher first (most reliable on Windows)
+    $pyHint = Join-Path -Path $env:SystemRoot -ChildPath "py.exe"
+    if ((Test-Path -Path $pyHint) -and (Test-RealPython -Path $pyHint)) {
+        $cli = $pyHint
     }
 
-    $pywCommand = Get-Command -Name "pyw" -ErrorAction SilentlyContinue
-    if ($pywCommand) {
-        $context = Resolve-CommandPath -Command $pywCommand
+    # Try pyw launcher
+    $pywHint = Join-Path -Path $env:SystemRoot -ChildPath "pyw.exe"
+    if ((Test-Path -Path $pywHint) -and (Test-RealPython -Path $pywHint)) {
+        $context = $pywHint
     }
 
+    # If py not found in System32, try PATH
     if (-not $cli) {
-        $pyHint = Join-Path -Path $env:SystemRoot -ChildPath "py.exe"
-        if (Test-Path -Path $pyHint) {
-            $cli = $pyHint
+        $pyCommand = Get-Command -Name "py" -ErrorAction SilentlyContinue
+        if ($pyCommand) {
+            $pyPath = Resolve-CommandPath -Command $pyCommand
+            if (Test-RealPython -Path $pyPath) {
+                $cli = $pyPath
+            }
+        }
+    }
+
+    # Try python.exe as last resort (avoid Microsoft Store stub)
+    if (-not $cli) {
+        $pythonCommand = Get-Command -Name "python" -ErrorAction SilentlyContinue
+        if ($pythonCommand) {
+            $pythonPath = Resolve-CommandPath -Command $pythonCommand
+            # Extra check: Microsoft Store stub is in WindowsApps folder
+            if ($pythonPath -notlike "*WindowsApps*" -and (Test-RealPython -Path $pythonPath)) {
+                $cli = $pythonPath
+            }
         }
     }
 
     if (-not $context) {
-        $pywHint = Join-Path -Path $env:SystemRoot -ChildPath "pyw.exe"
-        if (Test-Path -Path $pywHint) {
-            $context = $pywHint
-        }
-    }
-
-    if (-not $cli) {
-        $pythonCommand = Get-Command -Name "python" -ErrorAction SilentlyContinue
-        if ($pythonCommand) {
-            $cli = Resolve-CommandPath -Command $pythonCommand
+        $pywCommand = Get-Command -Name "pyw" -ErrorAction SilentlyContinue
+        if ($pywCommand) {
+            $pywPath = Resolve-CommandPath -Command $pywCommand
+            if (Test-RealPython -Path $pywPath) {
+                $context = $pywPath
+            }
         }
     }
 
@@ -173,12 +208,22 @@ function Ensure-Python {
         Write-Host ""
         Write-Host "Python installation completed, but Python launcher not found in PATH." -ForegroundColor Yellow
         Write-Host ""
-        Write-Host "Please do ONE of the following:" -ForegroundColor Cyan
-        Write-Host "  1. Close this PowerShell window and run the installer again" -ForegroundColor White
-        Write-Host "  2. Or manually install Python from: https://www.python.org/downloads/" -ForegroundColor White
-        Write-Host "     Make sure to check 'Add Python to PATH' during installation" -ForegroundColor White
+        Write-Host "This might be due to the Windows Store Python alias interfering." -ForegroundColor Yellow
         Write-Host ""
-        throw "Python installation requires a shell restart. Please rerun the installer."
+        Write-Host "Please do ONE of the following:" -ForegroundColor Cyan
+        Write-Host ""
+        Write-Host "Option 1 - Disable Windows Store Python alias:" -ForegroundColor White
+        Write-Host "  1. Open Settings > Apps > Advanced app settings > App execution aliases" -ForegroundColor Gray
+        Write-Host "  2. Turn OFF both 'python.exe' and 'python3.exe' aliases" -ForegroundColor Gray
+        Write-Host "  3. Close PowerShell and run the installer again" -ForegroundColor Gray
+        Write-Host ""
+        Write-Host "Option 2 - Manually install Python:" -ForegroundColor White
+        Write-Host "  1. Go to: https://www.python.org/downloads/" -ForegroundColor Gray
+        Write-Host "  2. Download and run the installer" -ForegroundColor Gray
+        Write-Host "  3. CHECK 'Add Python to PATH' during installation" -ForegroundColor Gray
+        Write-Host "  4. Run the installer again" -ForegroundColor Gray
+        Write-Host ""
+        throw "Python installation requires configuration. Please follow the steps above."
     }
     if (-not $launchers.Context) {
         Write-Warning "Python windowed launcher (pyw) not found. Context menu will use '$($launchers.Cli)'."
