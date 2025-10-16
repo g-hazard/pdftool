@@ -100,12 +100,15 @@ def _prepare_tk() -> Tuple[Optional["tkinter.Tk"], Optional[object], Optional[ob
     try:
         import tkinter as tk
         from tkinter import filedialog, messagebox
+        
+        root = tk.Tk()
+        root.withdraw()
+        # Ensure window is properly hidden
+        root.update_idletasks()
+        root.attributes('-alpha', 0.0)  # Make invisible
+        return root, filedialog, messagebox
     except Exception:
         return None, None, None
-
-    root = tk.Tk()
-    root.withdraw()
-    return root, filedialog, messagebox
 
 
 def _choose_output_path(
