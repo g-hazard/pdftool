@@ -111,11 +111,58 @@ def _prepare_tk() -> Tuple[Optional["tkinter.Tk"], Optional[object], Optional[ob
         return None, None, None
 
 
+def _choose_output_path_native(first_pdf: Path) -> Optional[Path]:
+    """Open native Windows Save As dialog using win32com."""
+    try:
+        import win32gui
+        import win32con
+        from win32com.shell import shell, shellcon
+        
+        # Create save file dialog
+        default_name = f"{first_pdf.stem}_merged.pdf"
+        initial_dir = str(first_pdf.parent)
+        
+        # Use GetSaveFileNameW for native Windows dialog
+        filter_str = "PDF Files\0*.pdf\0All Files\0*.*\0\0"
+        
+        custom_filter = "PDF Files (*.pdf)\0*.pdf\0All Files (*.*)\0*.*\0"
+        flags = (
+            win32con.OFN_OVERWRITEPROMPT |
+            win32con.OFN_HIDEREADONLY |
+            win32con.OFN_EXPLORER
+        )
+        
+        fname, _, _ = win32gui.GetSaveFileNameW(
+            InitialDir=initial_dir,
+            Flags=flags,
+            File=default_name,
+            DefExt="pdf",
+            Title="Merge PDF - Choose destination",
+            Filter=custom_filter,
+            FilterIndex=1
+        )
+        
+        if fname:
+            return Path(fname)
+        return None
+    except Exception:
+        # Fall back to Tkinter
+        return None
+
 def _choose_output_path(
     filedialog_module: object,
     first_pdf: Path,
 ) -> Optional[Path]:
     """Open a save dialog to pick the output path."""
+    # Try native Windows dialog first (more reliable)
+    try:
+        result = _choose_output_path_native(first_pdf)
+        if result is not None:
+            return result
+    except:
+        pass
+    
+    # Fall back to Tkinter
     if filedialog_module is None:
         return None
 

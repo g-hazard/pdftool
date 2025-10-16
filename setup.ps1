@@ -243,8 +243,8 @@ function Ensure-PdfLibraries {
     Write-Note "Upgrading pip."
     Invoke-PythonCommand -Launcher $CliLauncher -Arguments @("-m", "pip", "install", "--upgrade", "pip") -ErrorMessage "Failed to upgrade pip."
 
-    Write-Note "Installing required packages (pypdf, winotify, filelock)."
-    Invoke-PythonCommand -Launcher $CliLauncher -Arguments @("-m", "pip", "install", "--upgrade", "pypdf", "winotify", "filelock") -ErrorMessage "Failed to install required packages."
+    Write-Note "Installing required packages (pypdf, winotify, filelock, pywin32)."
+    Invoke-PythonCommand -Launcher $CliLauncher -Arguments @("-m", "pip", "install", "--upgrade", "pypdf", "winotify", "filelock", "pywin32") -ErrorMessage "Failed to install required packages."
 }
 
 function Register-ContextMenu {

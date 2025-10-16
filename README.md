@@ -11,6 +11,7 @@ irm https://raw.githubusercontent.com/g-hazard/pdftool/main/portable-installer.p
 ```
 
 **What this does:**
+
 - ✅ Downloads portable Python (~45MB total) to `%LOCALAPPDATA%\PDFMergeTool`
 - ✅ Self-contained - everything in one folder
 - ✅ No system-wide Python installation
@@ -50,7 +51,7 @@ If you prefer to set things up manually, make sure you have:
 - Python 3.8+ installed with the standard `py`/`pyw` launcher registered under `C:\Windows`
 - Required packages:
   ```powershell
-  py -m pip install pypdf winotify filelock
+  py -m pip install pypdf winotify filelock pywin32
   ```
 
 ## Files
@@ -84,17 +85,20 @@ If you prefer to set things up manually, make sure you have:
 **Portable Version:**
 
 Option 1 - Run the uninstaller:
+
 ```powershell
 powershell -File "$env:LOCALAPPDATA\PDFMergeTool\uninstall.ps1"
 ```
 
 Option 2 - Manual removal:
+
 1. Delete folder: `%LOCALAPPDATA%\PDFMergeTool`
 2. Remove registry key: `HKCU\Software\Classes\SystemFileAssociations\.pdf\shell\Merge PDF`
 
 **System Python Version:**
 
 Run:
+
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\unregister_context_menu.ps1
 ```
@@ -125,4 +129,5 @@ Omit the `-o` flag to trigger the graphical save dialog.
 
 - Ensure all selected files are valid PDFs
 - Check the log file for error details
+
 # pdftool

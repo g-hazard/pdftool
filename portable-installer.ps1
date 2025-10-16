@@ -91,8 +91,8 @@ $pythonExe = Join-Path $InstallPath "python.exe"
 Remove-Item $getPipPath
 
 # Install required packages
-Write-Step "Installing PDF libraries (pypdf, winotify, filelock)..."
-& $pythonExe -m pip install --no-warn-script-location pypdf winotify filelock 2>&1 | Out-Null
+Write-Step "Installing PDF libraries (pypdf, winotify, filelock, pywin32)..."
+& $pythonExe -m pip install --no-warn-script-location pypdf winotify filelock pywin32 2>&1 | Out-Null
 Write-Success "Libraries installed"
 
 # Download scripts from GitHub
