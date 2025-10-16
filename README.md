@@ -36,11 +36,12 @@ Use `-SkipRegister` if you just want to install dependencies, or `-VerbName "Com
 
 ## Features
 
-- **Merge multiple PDFs** into a single document
-- **Alphabetical ordering** of input files for predictable results
-- **Windows 11-style notifications** - Modern toast alerts
-- **Silent operation** - No console windows
-- **Simple save dialog** - Choose output location easily
+- **Merge multiple PDFs** into a single document with one click
+- **Alphabetical ordering** - Files merged in predictable order
+- **Auto-naming** - Creates `merged.pdf` (or `merged_1.pdf`, `merged_2.pdf`, etc.)
+- **Same folder output** - Merged file appears where you selected files
+- **Windows 11-style notifications** - Modern toast alerts show result
+- **Silent operation** - No console windows, no dialogs, just works
 - **Multi-select support** - Select and merge many files at once
 
 ## Prerequisites
