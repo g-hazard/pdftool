@@ -64,6 +64,13 @@ Write-Step "Extracting Python..."
 Expand-Archive -Path $pythonZip -DestinationPath $InstallPath -Force
 Remove-Item $pythonZip
 
+# Create pythonw.exe (embedded package only has python.exe)
+$pythonExe = Join-Path $InstallPath "python.exe"
+$pythonwExe = Join-Path $InstallPath "pythonw.exe"
+if ((Test-Path $pythonExe) -and (-not (Test-Path $pythonwExe))) {
+    Copy-Item -Path $pythonExe -Destination $pythonwExe
+}
+
 # Enable site-packages for pip
 Write-Step "Configuring Python..."
 $pthFile = Get-ChildItem -Path $InstallPath -Filter "*._pth" | Select-Object -First 1
@@ -108,12 +115,17 @@ foreach ($script in $scripts) {
     }
 }
 
-# Create wrapper script for context menu
+# Create wrapper script for context menu (VBS for completely silent execution)
 Write-Step "Creating launcher..."
-$wrapperScript = Join-Path $InstallPath "merge-pdf.cmd"
+$wrapperScript = Join-Path $InstallPath "merge-pdf.vbs"
 $wrapperContent = @"
-@echo off
-"%~dp0pythonw.exe" "%~dp0merge_pdf_handler.py" %*
+Set objShell = CreateObject("WScript.Shell")
+Set objFSO = CreateObject("Scripting.FileSystemObject")
+strScriptPath = objFSO.GetParentFolderName(WScript.ScriptFullName)
+strPython = strScriptPath & "\pythonw.exe"
+strHandler = strScriptPath & "\merge_pdf_handler.py"
+strArgs = WScript.Arguments(0)
+objShell.Run Chr(34) & strPython & Chr(34) & " " & Chr(34) & strHandler & Chr(34) & " " & Chr(34) & strArgs & Chr(34), 0, False
 "@
 $wrapperContent | Set-Content $wrapperScript
 
@@ -131,7 +143,7 @@ if (Test-Path $iconSource) {
 
 $commandKey = Join-Path $registryBase "command"
 New-Item -Path $commandKey -Force | Out-Null
-$commandValue = "`"$wrapperScript`" `"%1`""
+$commandValue = "wscript.exe `"$wrapperScript`" `"%1`""
 Set-ItemProperty -Path $commandKey -Name "(Default)" -Value $commandValue
 
 Write-Success "Context menu registered"

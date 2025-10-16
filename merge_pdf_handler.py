@@ -95,15 +95,44 @@ def main():
                 temp_file.unlink(missing_ok=True)
             
             # Launch the merge script only if we have 2+ files
-            if len(unique_files) >= 1:  # Allow single file too for testing
+            if len(unique_files) >= 2:  # Require at least 2 files
                 script_dir = Path(__file__).parent
                 merge_script = script_dir / 'merge_pdfs.py'
                 
-                # Launch using pyw.exe (no console window)
-                pyw_exe = Path(r'C:\WINDOWS\pyw.exe')
-                if pyw_exe.exists() and merge_script.exists():
+                if not merge_script.exists():
+                    return
+                
+                # Find Python executable (try multiple locations)
+                python_exe = None
+                
+                # Try portable Python in the same directory (for portable installation)
+                portable_python = script_dir / 'pythonw.exe'
+                if portable_python.exists():
+                    python_exe = portable_python
+                
+                # Try system Python launchers
+                if not python_exe:
+                    for candidate in [
+                        Path(r'C:\WINDOWS\pyw.exe'),
+                        Path(r'C:\WINDOWS\pythonw.exe'),
+                    ]:
+                        if candidate.exists():
+                            python_exe = candidate
+                            break
+                
+                # Try to find pythonw in PATH
+                if not python_exe:
+                    try:
+                        import shutil
+                        pyw_path = shutil.which('pythonw')
+                        if pyw_path:
+                            python_exe = Path(pyw_path)
+                    except:
+                        pass
+                
+                if python_exe and python_exe.exists():
                     # Build command
-                    cmd = [str(pyw_exe), str(merge_script)] + unique_files
+                    cmd = [str(python_exe), str(merge_script)] + unique_files
                     
                     # Launch with CREATE_NO_WINDOW flag
                     startupinfo = subprocess.STARTUPINFO()
@@ -115,6 +144,13 @@ def main():
                         startupinfo=startupinfo,
                         creationflags=subprocess.CREATE_NO_WINDOW
                     )
+                else:
+                    # Log if Python not found
+                    error_log = Path(tempfile.gettempdir()) / 'pdf_merge_handler_error.log'
+                    with open(error_log, 'a', encoding='utf-8') as f:
+                        f.write(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] Python executable not found. Tried: {script_dir / 'pythonw.exe'}, C:\\WINDOWS\\pyw.exe\n")
+                        f.write(f"  Script dir: {script_dir}\n")
+                        f.write(f"  Files to merge: {len(unique_files)}\n")
     
     except filelock.Timeout:
         # Couldn't acquire lock, exit silently
